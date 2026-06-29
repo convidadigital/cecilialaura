@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Chave Mágica</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="scene" id="scene">
+    <img src="porta.png" class="layer porta" alt="Porta" />
+    <img src="chave.png" class="chave" id="chave" alt="Chave" draggable="false" />
+    <img src="frame-correto.png" class="layer frame-correto" id="frameCorreto" alt="Chave encaixada" />
+    <video class="layer video-final" id="videoFinal" src="chave-girando.mp4" playsinline muted preload="auto"></video>
+    <div class="glow" id="glow"></div>
+    <div class="texto" id="texto">A porta se abriu</div>
+    <div class="instrucao" id="instrucao">Arraste a chave até a fechadura</div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>

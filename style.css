@@ -1,0 +1,17 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #000; touch-action: none; overscroll-behavior: none; }
+body { font-family: Georgia, 'Times New Roman', serif; }
+.scene { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+.layer { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.porta { z-index: 1; }
+.chave { position: absolute; width: min(48vw, 390px); left: 18%; top: 66%; z-index: 5; transform: translate(-50%, -50%) rotate(90deg); transform-origin: 50% 50%; touch-action: none; user-select: none; -webkit-user-drag: none; filter: drop-shadow(0 10px 16px rgba(0,0,0,.75)); }
+.frame-correto { z-index: 6; opacity: 0; pointer-events: none; transition: opacity .35s ease; }
+.video-final { z-index: 7; opacity: 0; pointer-events: none; transition: opacity .35s ease; background: transparent; }
+.glow { position: absolute; left: 52%; top: 48%; width: 160px; height: 160px; border-radius: 50%; background: radial-gradient(circle, rgba(255,214,133,.95), rgba(255,165,62,.45), transparent 72%); transform: translate(-50%, -50%); filter: blur(18px); opacity: 0; z-index: 4; pointer-events: none; }
+.glow.active { animation: glowAnim 1.6s ease forwards; }
+@keyframes glowAnim { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.5); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); } 100% { opacity: .2; transform: translate(-50%, -50%) scale(1.7); } }
+.texto { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #ffd889; font-size: clamp(36px, 8vw, 78px); text-align: center; opacity: 0; z-index: 20; pointer-events: none; text-shadow: 0 0 20px rgba(255,200,92,.95), 0 0 40px rgba(255,160,50,.5); padding: 24px; }
+.texto.show { opacity: 1; transition: opacity 1.3s ease; }
+.instrucao { position: absolute; left: 0; bottom: 6%; width: 100%; text-align: center; color: #ffe2a0; font-size: 18px; z-index: 30; text-shadow: 0 0 10px #000; animation: pulse 1.6s ease-in-out infinite; pointer-events: none; }
+@keyframes pulse { 0%,100% { opacity: .45; } 50% { opacity: 1; } }
+.sparkle { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: #ffd889; box-shadow: 0 0 12px #ffd889; z-index: 15; pointer-events: none; }
