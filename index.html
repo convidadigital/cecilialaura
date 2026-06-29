@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Porta do Jardim</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="scene" id="scene">
+    <img class="door" src="porta.png" alt="Porta do jardim" draggable="false" />
+
+    <img class="key" id="key" src="chave.png" alt="Chave" draggable="false" />
+
+    <img class="frame" id="frame" src="frame-correto.png" alt="Chave encaixada" draggable="false" />
+
+    <video
+      class="video" id="video"
+      muted playsinline webkit-playsinline preload="auto"
+      poster="frame-correto.png">
+      <source src="chave-girando.mp4" type="video/mp4" />
+    </video>
+
+    <div class="glow" id="glow"></div>
+
+    <div class="hint" id="hint">Arraste a chave para fechadura</div>
+
+    <button class="fallback" id="fallback" type="button">Continuar</button>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
