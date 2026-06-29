@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Chave Mágica</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  touch-action: none;
+  overscroll-behavior: none;
+  font-family: Georgia, serif;
+}
+
+.scene {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000;
+}
+
+.porta,
+.frame,
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.porta {
+  z-index: 1;
+}
+
+.chave {
+  position: absolute;
+  width: 42vw;
+  max-width: 340px;
+  left: 20%;
+  top: 65%;
+  z-index: 5;
+  transform: translate(-50%, -50%) rotate(90deg);
+  touch-action: none;
+  cursor: grab;
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,.7));
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.frame {
+  z-index: 6;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .5s ease;
+}
+
+.video {
+  z-index: 7;
+  opacity: 0;
+  pointer-events: none;
+  background: #000;
+  transition: opacity .4s ease;
+}
+
+.instrucao {
+  position: absolute;
+  left: 0;
+  bottom: 6%;
+  width: 100%;
+  z-index: 30;
+  text-align: center;
+  color: #ffe3a0;
+  font-size: 18px;
+  text-shadow: 0 0 10px #000;
+  animation: pulse 1.6s infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: .45; }
+  50% { opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="scene" id="scene">
+  <img class="porta" src="./porta.png" alt="Porta">
+
+  <img class="chave" id="chave" src="./chave.png" alt="Chave">
+
+  <img class="frame" id="frame" src="./frame-correto.png" alt="Chave encaixada">
+
+  <video
+    class="video"
+    id="video"
+    muted
+    playsinline
+    webkit-playsinline
+    preload="auto">
+    <source src="./chave-girando.mp4" type="video/mp4">
+  </video>
+
+  <div class="instrucao" id="instrucao">Arraste a chave até a fechadura</div>
+</div>
+
+<script>
+const scene = document.getElementById("scene");
+const chave = document.getElementById("chave");
+const frame = document.getElementById("frame");
+const video = document.getElementById("video");
+const instrucao = document.getElementById("instrucao");
+
+let arrastando = false;
+let finalizado = false;
+let offsetX = 0;
+let offsetY = 0;
+
+const LINK_CONVITE = "https://convite-digital.com/c/lauracecilia";
+
+/* Ponto aproximado da fechadura na imagem */
+const pontoFechadura = {
+  x: 52,
+  y: 48
+};
+
+function ponto(e) {
+  return e.touches ? e.touches[0] : e;
+}
+
+function iniciar(e) {
+  if (finalizado) return;
+
+  arrastando = true;
+  chave.style.transition = "none";
+
+  const p = ponto(e);
+  const r = chave.getBoundingClientRect();
+
+  offsetX = p.clientX - r.left;
+  offsetY = p.clientY - r.top;
+
+  e.preventDefault();
+}
+
+function mover(e) {
+  if (!arrastando || finalizado) return;
+
+  const p = ponto(e);
+
+  chave.style.left = (p.clientX - offsetX + chave.offsetWidth / 2) + "px";
+  chave.style.top = (p.clientY - offsetY + chave.offsetHeight / 2) + "px";
+
+  e.preventDefault();
+}
+
+function soltar() {
+  if (!arrastando || finalizado) return;
+
+  arrastando = false;
+
+  const sceneRect = scene.getBoundingClientRect();
+  const chaveRect = chave.getBoundingClientRect();
+
+  const centroChaveX = chaveRect.left + chaveRect.width / 2;
+  const centroChaveY = chaveRect.top + chaveRect.height / 2;
+
+  const alvoX = sceneRect.width * pontoFechadura.x / 100;
+  const alvoY = sceneRect.height * pontoFechadura.y / 100;
+
+  const distancia = Math.hypot(centroChaveX - alvoX, centroChaveY - alvoY);
+
+  if (distancia < 260) {
+    encaixar();
+  }
+}
+
+function encaixar() {
+  finalizado = true;
+  instrucao.style.display = "none";
+
+  chave.style.transition = ".9s ease";
+  chave.style.left = "50%";
+  chave.style.top = "50%";
+  chave.style.width = "100vw";
+  chave.style.maxWidth = "none";
+  chave.style.transform = "translate(-50%, -50%) rotate(0deg)";
+  chave.style.opacity = "0";
+
+  frame.style.opacity = "1";
+
+  setTimeout(() => {
+    tocarVideo();
+  }, 900);
+}
+
+function tocarVideo() {
+  frame.style.opacity = "0";
+  video.style.opacity = "1";
+  video.currentTime = 0;
+
+  const playPromise = video.play();
+
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {
+      redirecionar();
+    });
+  }
+}
+
+function redirecionar() {
+  window.location.replace(LINK_CONVITE);
+}
+
+video.addEventListener("ended", () => {
+  redirecionar();
+});
+
+chave.addEventListener("mousedown", iniciar);
+chave.addEventListener("touchstart", iniciar, { passive: false });
+
+window.addEventListener("mousemove", mover);
+window.addEventListener("touchmove", mover, { passive: false });
+
+window.addEventListener("mouseup", soltar);
+window.addEventListener("touchend", soltar);
+</script>
+
+</body>
+</html>
