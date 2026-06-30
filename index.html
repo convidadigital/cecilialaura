@@ -1,33 +1,349 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Porta do Jardim</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Porta do Jardim</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  user-select: none;
+  touch-action: none;
+  font-family: Georgia, 'Times New Roman', serif;
+}
+
+#app {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#porta {
+  z-index: 1;
+}
+
+#frameCorreto {
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .15s linear;
+}
+
+#videoFinal {
+  z-index: 5;
+  opacity: 0;
+  pointer-events: none;
+  background: #000;
+  transition: opacity .15s linear;
+}
+
+#chave {
+  position: absolute;
+  z-index: 3;
+  width: min(54vw, 420px);
+  left: 22%;
+  top: 60%;
+  transform: translate(-50%, -50%) rotate(90deg);
+  transform-origin: 50% 50%;
+  touch-action: none;
+  cursor: grab;
+  filter: drop-shadow(0 10px 18px rgba(0,0,0,.75));
+  will-change: left, top, transform, opacity;
+}
+
+#hint {
+  position: absolute;
+  left: 50%;
+  top: calc(7vh + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 20;
+  width: 90%;
+  max-width: 520px;
+  text-align: center;
+  color: #ffe7ae;
+  font-size: clamp(18px, 4.5vw, 27px);
+  line-height: 1.25;
+  text-shadow: 0 2px 8px #000, 0 0 14px rgba(255,210,120,.9);
+  padding: 11px 16px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(3px);
+  animation: pulse 1.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%,100% { opacity: .75; }
+  50% { opacity: 1; }
+}
+
+#flash {
+  position: absolute;
+  left: 52%;
+  top: 48%;
+  width: 34vw;
+  height: 34vw;
+  max-width: 260px;
+  max-height: 260px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(.5);
+  z-index: 2;
+  opacity: 0;
+  background: radial-gradient(circle, rgba(255,220,140,1) 0%, rgba(255,184,82,.55) 35%, rgba(255,184,82,0) 72%);
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+#flash.on {
+  animation: glow .8s ease-out forwards;
+}
+
+@keyframes glow {
+  0% { opacity: 0; transform: translate(-50%,-50%) scale(.45); }
+  45% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%,-50%) scale(1.65); }
+}
+
+.sparkle {
+  position: absolute;
+  left: 52%;
+  top: 48%;
+  z-index: 6;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffd98a;
+  box-shadow: 0 0 12px #ffd98a;
+  pointer-events: none;
+}
+
+#erro {
+  position: absolute;
+  inset: auto 16px calc(3vh + env(safe-area-inset-bottom)) 16px;
+  z-index: 30;
+  color: #ffe7ae;
+  text-align: center;
+  font-size: 13px;
+  display: none;
+  text-shadow: 0 1px 4px #000;
+}
+</style>
 </head>
+
 <body>
-  <main class="scene" id="scene">
-    <img class="door" src="porta.png" alt="Porta do jardim" draggable="false" />
+<main id="app">
+  <img id="porta" class="layer" src="./porta.png" draggable="false" />
 
-    <img class="key" id="key" src="chave.png" alt="Chave" draggable="false" />
+  <div id="flash"></div>
 
-    <img class="frame" id="frame" src="frame-correto.png" alt="Chave encaixada" draggable="false" />
+  <img id="chave" src="./chave.png" draggable="false" />
 
-    <video
-      class="video" id="video"
-      muted playsinline webkit-playsinline preload="auto"
-      poster="frame-correto.png">
-      <source src="chave-girando.mp4" type="video/mp4" />
-    </video>
+  <img id="frameCorreto" class="layer" src="./frame-correto.png" draggable="false" />
 
-    <div class="glow" id="glow"></div>
+  <video id="videoFinal" class="layer" muted playsinline webkit-playsinline preload="auto">
+    <source src="./chave-girando.mp4" type="video/mp4" />
+  </video>
 
-    <div class="hint" id="hint">Arraste a chave para fechadura</div>
+  <div id="hint">Arraste a chave para a fechadura</div>
+  <div id="erro">Não foi possível carregar o vídeo. Confira se o arquivo se chama chave-girando.mp4.</div>
+</main>
 
-    <button class="fallback" id="fallback" type="button">Continuar</button>
-  </main>
+<script>
+const app = document.getElementById('app');
+const chave = document.getElementById('chave');
+const hint = document.getElementById('hint');
+const frame = document.getElementById('frameCorreto');
+const video = document.getElementById('videoFinal');
+const flash = document.getElementById('flash');
+const erro = document.getElementById('erro');
 
-  <script src="script.js"></script>
+const LINK_CONVITE = 'https://convite-digital.com/c/lauracecilia';
+
+let dragging = false;
+let finished = false;
+let offsetX = 0;
+let offsetY = 0;
+
+const LOCK = { x: 52, y: 48 };
+const SNAP_DISTANCE = 240;
+
+const START = {
+  left: '22%',
+  top: '60%',
+  width: 'min(54vw, 420px)',
+  transform: 'translate(-50%, -50%) rotate(90deg)'
+};
+
+function prepareVideo() {
+  video.muted = true;
+  video.playsInline = true;
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  try { video.load(); } catch(e) {}
+}
+
+prepareVideo();
+
+function onStart(e) {
+  if (finished) return;
+
+  dragging = true;
+  prepareVideo();
+
+  const r = chave.getBoundingClientRect();
+
+  offsetX = e.clientX - r.left;
+  offsetY = e.clientY - r.top;
+
+  chave.style.transition = 'none';
+  hint.style.opacity = '.35';
+
+  try {
+    chave.setPointerCapture(e.pointerId);
+  } catch(err) {}
+
+  e.preventDefault();
+}
+
+function onMove(e) {
+  if (!dragging || finished) return;
+
+  chave.style.left = (e.clientX - offsetX + chave.offsetWidth / 2) + 'px';
+  chave.style.top = (e.clientY - offsetY + chave.offsetHeight / 2) + 'px';
+
+  e.preventDefault();
+}
+
+function onEnd(e) {
+  if (!dragging || finished) return;
+
+  dragging = false;
+  hint.style.opacity = '1';
+
+  const appRect = app.getBoundingClientRect();
+  const keyRect = chave.getBoundingClientRect();
+
+  const tipX = keyRect.left + keyRect.width * 0.88;
+  const tipY = keyRect.top + keyRect.height * 0.50;
+
+  const lockX = appRect.width * LOCK.x / 100;
+  const lockY = appRect.height * LOCK.y / 100;
+
+  const dist = Math.hypot(tipX - lockX, tipY - lockY);
+
+  if (dist <= SNAP_DISTANCE) {
+    snapAndPlay();
+  } else {
+    chave.style.transition = '.45s ease';
+    chave.style.left = START.left;
+    chave.style.top = START.top;
+    chave.style.width = START.width;
+    chave.style.transform = START.transform;
+  }
+
+  e.preventDefault();
+}
+
+function snapAndPlay() {
+  finished = true;
+  hint.style.display = 'none';
+
+  chave.style.transition = '.55s cubic-bezier(.2,.8,.2,1)';
+  chave.style.left = '44%';
+  chave.style.top = '45%';
+  chave.style.width = '62vw';
+  chave.style.maxWidth = '520px';
+  chave.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+
+  setTimeout(() => {
+    frame.style.opacity = '1';
+    chave.style.opacity = '0';
+    flash.classList.add('on');
+    makeSparkles();
+  }, 560);
+
+  setTimeout(() => {
+    startVideo();
+  }, 760);
+}
+
+function startVideo() {
+  frame.style.opacity = '0';
+  video.style.opacity = '1';
+  video.currentTime = 0;
+
+  video.play().catch(() => {
+    erro.style.display = 'block';
+  });
+}
+
+function goToInvite() {
+  window.location.replace(LINK_CONVITE);
+}
+
+video.addEventListener('ended', goToInvite);
+
+video.addEventListener('timeupdate', () => {
+  if (video.duration && video.currentTime >= video.duration - 0.12) {
+    goToInvite();
+  }
+});
+
+video.addEventListener('error', () => {
+  erro.style.display = 'block';
+});
+
+function makeSparkles() {
+  for (let i = 0; i < 34; i++) {
+    const s = document.createElement('span');
+    s.className = 'sparkle';
+
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 35 + Math.random() * 120;
+    const x = Math.cos(angle) * dist;
+    const y = Math.sin(angle) * dist;
+
+    app.appendChild(s);
+
+    s.animate([
+      { transform: 'translate(-50%, -50%) scale(0)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px)) scale(1)`, opacity: 0 }
+    ], {
+      duration: 1250,
+      easing: 'ease-out'
+    });
+
+    setTimeout(() => s.remove(), 1350);
+  }
+}
+
+/* Usa apenas Pointer Events para evitar bug duplicado no celular */
+chave.addEventListener('pointerdown', onStart, { passive: false });
+window.addEventListener('pointermove', onMove, { passive: false });
+window.addEventListener('pointerup', onEnd, { passive: false });
+window.addEventListener('pointercancel', onEnd, { passive: false });
+</script>
 </body>
 </html>
